@@ -1,0 +1,29 @@
+{
+  "name": "jimmy.asana-import",
+  "description": "asana-import",
+  "version": "1.0.0",
+  "author": "jimmy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sorza-jimmy/asana-importer.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^16.8.0"
+  },
+  "ahaExtension": {
+    "contributes": {
+      "importers": {
+        "asanaImport": {
+          "title": "asana-import",
+          "entryPoint": "src/importers/asanaImport.js"
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "@aha-app/aha-develop-react": "^1.0.6",
+    "asana": "^0.18.6",
+    "react": "^17.0.2"
+  }
+}
