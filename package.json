@@ -12,11 +12,14 @@
     "@types/react": "^16.8.0"
   },
   "ahaExtension": {
+    "cspSources": [
+      "https://app.asana.com"
+    ],
     "contributes": {
       "importers": {
         "asanaImport": {
-          "title": "asana-import",
-          "entryPoint": "src/importers/asanaImport.js"
+          "title": "Asana Import",
+          "entryPoint": "src/importers/asanaImport.tsx"
         }
       }
     }
@@ -24,6 +27,7 @@
   "dependencies": {
     "@aha-app/aha-develop-react": "^1.0.6",
     "asana": "^0.18.6",
+    "axios": "^0.21.1",
     "react": "^17.0.2"
   }
 }
