@@ -1,4 +1,4 @@
-import { ACCESS_TOKEN, API_URL } from "./config";
+import { ACCESS_TOKEN } from "./config";
 import axios from "./axios";
 
 export class AsanaClient {
@@ -8,31 +8,63 @@ export class AsanaClient {
   constructor() {}
 
   getProjects = async (options: IGetProjectOptions): Promise<IProject[]> => {
-    const {
-      data: { data },
-    } = await axios().get("/projects", { params: options });
-    return data;
+    try {
+      const {
+        data: { data },
+      } = await axios().get("/projects", { params: options });
+      return data;
+    } catch (error) {
+      this.log("Could not get Projects", error);
+      return [];
+    }
   };
 
   getWorkSpaces = async (): Promise<IWorkSpace[]> => {
-    const {
-      data: { data },
-    } = await axios().get("/workspaces");
-    return data;
+    try {
+      const {
+        data: { data },
+      } = await axios().get("/workspaces");
+      return data;
+    } catch (error) {
+      this.log("Could not get Workspaces", error);
+      return [];
+    }
   };
 
   getUsers = async (options: IGetUserOptions): Promise<IUser[]> => {
-    const {
-      data: { data },
-    } = await axios().get("/users", { params: options });
-    return data;
+    try {
+      const {
+        data: { data },
+      } = await axios().get("/users", { params: options });
+      return data;
+    } catch (error) {
+      this.log("Could not get Users", error);
+      return [];
+    }
   };
 
-  getTasks = async (options: IGetTaskOptions): Promise<ITask[]> => {
-    const {
-      data: { data },
-    } = await axios().get("/tasks", { params: options });
-    return data;
+  getTasks = async (options: IGetTaskOptions): Promise<{ data: ITaskCompact[]; next_page: string | null }> => {
+    try {
+      const {
+        data: { data, next_page },
+      } = await axios().get("/tasks", { params: { ...options } });
+      return { data, next_page };
+    } catch (error) {
+      this.log("Could not get Tasks", error);
+      return { data: [], next_page: null };
+    }
+  };
+
+  getTask = async (taskId: string): Promise<ITask> => {
+    try {
+      const {
+        data: { data },
+      } = await axios().get(`/tasks/${taskId}`);
+      return data;
+    } catch (error) {
+      this.log("Could not get Task", error);
+      return null;
+    }
   };
 
   static create = async (refresh = false): Promise<AsanaClient> => {
@@ -51,5 +83,9 @@ export class AsanaClient {
 
     AsanaClient._instance = new AsanaClient();
     return AsanaClient._instance;
+  };
+
+  log = (msg, error) => {
+    console.log(`[Error in Asana API Call] => `, msg, error);
   };
 }

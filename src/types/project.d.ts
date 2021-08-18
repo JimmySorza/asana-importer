@@ -4,6 +4,6 @@ declare interface IProject {
   name: string;
 }
 
-declare interface IProjectOptions {
+declare interface IGetProjectOptions {
   workspace: string;
 }

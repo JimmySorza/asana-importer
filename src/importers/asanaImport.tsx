@@ -1,15 +1,10 @@
 import { AsanaClient } from "./asana";
+import { convertOptions } from "./utils";
+import { MAX_RESULTS } from "./config";
 
 const importer = aha.getImporter("jimmy.asana-import.asanaImport");
 
 const asanaClient = AsanaClient.create();
-
-const convertOptions = (el: any): Aha.FilterValue => {
-  return {
-    text: el.name,
-    value: el.gid,
-  };
-};
 
 importer.on({ action: "listFilters" }, async () => {
   return {
@@ -21,11 +16,6 @@ importer.on({ action: "listFilters" }, async () => {
     project: {
       title: "Project",
       required: true,
-      type: "autocomplete",
-    },
-    assignee: {
-      title: "Assignee",
-      required: false,
       type: "autocomplete",
     },
   };
@@ -42,12 +32,34 @@ importer.on({ action: "filterValues" }, async ({ filterName, filters }): Promise
       const projects = await (await asanaClient).getProjects({ workspace: activeWorkSpace });
       return projects.map(convertOptions);
     }
-    case "assignee": {
-      const activeWorkSpace = filters.workspace;
-      const users = await (await asanaClient).getUsers({ workspace: activeWorkSpace });
-      return users.map(convertOptions);
-    }
   }
 
   return [];
+});
+
+importer.on({ action: "listCandidates" }, async ({ filters, nextPage }, { identifier, settings }) => {
+  const filterOptions: IGetTaskOptions = {
+    project: filters.project,
+    limit: MAX_RESULTS,
+    ...(nextPage ? { offset: nextPage } : {}),
+    ...(filters.assignee ? { assignee: filters.assignee } : {}),
+  };
+
+  const { data: tasks, next_page } = await (await asanaClient).getTasks(filterOptions);
+  return {
+    records: tasks.map(({ gid, name }) => {
+      return {
+        uniqueId: gid,
+        name: name,
+      };
+    }),
+    nextPage: next_page,
+  };
+});
+
+// Set the record description on import
+importer.on({ action: "importRecord" }, async ({ importRecord, ahaRecord }) => {
+  const task = await (await asanaClient).getTask(importRecord.uniqueId);
+  ahaRecord.description = `${task.notes}<p><a href='${task.permalink_url}'>View on Asana</a></p>` as any;
+  await ahaRecord.save();
 });
