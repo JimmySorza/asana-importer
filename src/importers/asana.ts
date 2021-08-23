@@ -67,20 +67,8 @@ export class AsanaClient {
     }
   };
 
-  static create = async (refresh = false): Promise<AsanaClient> => {
-    if (!refresh && AsanaClient._token && AsanaClient._instance) {
-      return AsanaClient._instance;
-    }
-
-    // const authData = await aha.auth("asana", {
-    //   useCachedRetry: true,
-    //   parameters: { scope: "offline_access" },
-    // });
-    // AsanaClient._token = authData.token;
-    AsanaClient._token = {
-      access_token: ACCESS_TOKEN,
-    };
-
+  static create = async (token): Promise<AsanaClient> => {
+    AsanaClient._token = token;
     AsanaClient._instance = new AsanaClient();
     return AsanaClient._instance;
   };
