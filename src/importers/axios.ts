@@ -1,14 +1,14 @@
 import axios, { AxiosInstance } from "axios";
-import { ACCESS_TOKEN, API_URL } from "./config";
+import { API_URL } from "./config";
 
-const createAxiosInstance = (): AxiosInstance => {
+const createAxiosInstance = (accessToken): AxiosInstance => {
   /**
    * Create Axios Instance
    */
   const axiosInstance = axios.create({
     baseURL: `${API_URL}`,
     headers: {
-      authorization: `Bearer ${ACCESS_TOKEN}`,
+      authorization: `Bearer ${accessToken}`,
     },
   });
 

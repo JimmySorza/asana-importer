@@ -4,7 +4,7 @@ import { MAX_RESULTS } from "./config";
 
 const importer = aha.getImporter("jimmy.asana-import.asanaImport");
 
-async function authenticate() {
+async function authenticate(useCache = true) {
   const authData = await aha.auth("asana", { useCachedRetry: true });
   return await AsanaClient.create(authData.token);
 }
