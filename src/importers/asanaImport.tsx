@@ -1,3 +1,4 @@
+import React from "react";
 import { AsanaClient } from "./asana";
 import { convertOptions } from "./utils";
 import { MAX_RESULTS } from "./config";
@@ -15,12 +16,12 @@ importer.on({ action: "listFilters" }, async () => {
     workspace: {
       title: "WorkSpace",
       required: true,
-      type: "autocomplete",
+      type: "select",
     },
     project: {
       title: "Project",
       required: true,
-      type: "autocomplete",
+      type: "select",
     },
   };
 });
@@ -69,4 +70,15 @@ importer.on({ action: "importRecord" }, async ({ importRecord, ahaRecord }) => {
   const task = await asanaClient.getTask(importRecord.uniqueId);
   ahaRecord.description = `${task.notes}<p><a href='${task.permalink_url}'>View on Asana</a></p>` as any;
   await ahaRecord.save();
+});
+
+importer.on({ action: "renderRecord" }, async ({ record, onUnmounted }, { identifier, settings }) => {
+  const asanaClient = await authenticate();
+  const task = await asanaClient.getTask(record.uniqueId);
+  return (
+    <div>
+      <h6>{(task?.memberships || [])[0]?.section?.name || ""}</h6>
+      <a href="${task.permalink_url}">{record.name}</a>
+    </div>
+  );
 });
