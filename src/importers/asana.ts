@@ -1,17 +1,32 @@
 import axios from "./axios";
 
+/**
+ * @class Asana API Manager
+ */
 export class AsanaClient {
   static _instance: AsanaClient;
   static _token: string;
 
   constructor() {}
 
+  /**
+   * When authentication failed
+   *
+   * @param callBack
+   * @returns
+   */
   reAuth = async (callBack) => {
     const authData = await aha.auth("asana", {});
     AsanaClient._token = authData.token;
     return await callBack();
   };
 
+  /**
+   * Get Projects from Asana
+   *
+   * @param options
+   * @returns
+   */
   getProjects = async (options: IGetProjectOptions): Promise<IProject[]> => {
     try {
       const {
@@ -24,6 +39,11 @@ export class AsanaClient {
     }
   };
 
+  /**
+   * Get Workspaces from Asana
+   *
+   * @returns
+   */
   getWorkSpaces = async (): Promise<IWorkSpace[]> => {
     try {
       const {
@@ -36,6 +56,12 @@ export class AsanaClient {
     }
   };
 
+  /**
+   * Get Users from Asana
+   *
+   * @param options
+   * @returns
+   */
   getUsers = async (options: IGetUserOptions): Promise<IUser[]> => {
     try {
       const {
@@ -48,6 +74,12 @@ export class AsanaClient {
     }
   };
 
+  /**
+   * Get Tasks from Asana
+   *
+   * @param options
+   * @returns
+   */
   getTasks = async (options: IGetTaskOptions): Promise<{ data: ITaskCompact[]; next_page: string | null }> => {
     try {
       const {
@@ -60,6 +92,12 @@ export class AsanaClient {
     }
   };
 
+  /**
+   * Get Task Details from Asana
+   *
+   * @param taskId
+   * @returns
+   */
   getTask = async (taskId: string): Promise<ITask> => {
     try {
       const {
@@ -72,12 +110,24 @@ export class AsanaClient {
     }
   };
 
+  /**
+   * Create AsanaClient Instance
+   *
+   * @param token
+   * @returns
+   */
   static create = async (token): Promise<AsanaClient> => {
     AsanaClient._token = token;
     AsanaClient._instance = new AsanaClient();
     return AsanaClient._instance;
   };
 
+  /**
+   * Error Log
+   *
+   * @param msg
+   * @param error
+   */
   log = (msg, error) => {
     console.log(`[Error in Asana API Call] => `, msg, error);
   };

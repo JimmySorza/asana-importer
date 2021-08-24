@@ -1,6 +1,12 @@
 import axios, { AxiosInstance } from "axios";
 import { API_URL } from "./config";
 
+/**
+ * Create Axios Instance
+ *
+ * @param accessToken
+ * @returns
+ */
 const createAxiosInstance = (accessToken): AxiosInstance => {
   /**
    * Create Axios Instance
@@ -15,13 +21,11 @@ const createAxiosInstance = (accessToken): AxiosInstance => {
   axiosInstance.interceptors.request.use((config) => {
     /* ----------------------------- API Call Start ----------------------------- */
     /* eslint-disable no-console */
-    console.log("[===== Started API Call =====]");
     return config;
   });
 
   axiosInstance.interceptors.response.use((response) => {
     /* ------------------------------ API Call End ------------------------------ */
-    console.log("[===== Ended API Call =====]");
     return response;
   });
 

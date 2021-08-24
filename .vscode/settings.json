@@ -4,5 +4,7 @@
       "fileMatch": ["package.json"],
       "url": "./.aha-cache/schema/package-schema.json"
     }
-  ]
+  ],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

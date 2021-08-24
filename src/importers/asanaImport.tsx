@@ -10,7 +10,10 @@ async function authenticate(useCache = true) {
   return await AsanaClient.create(authData.token);
 }
 
-importer.on({ action: "listFilters" }, async () => {
+/**
+ * Returns Filter List
+ */
+importer.on({ action: "listFilters" }, async (): Promise<Aha.ListFilters> => {
   const asanaClient = await authenticate();
   return {
     workspace: {
@@ -26,6 +29,9 @@ importer.on({ action: "listFilters" }, async () => {
   };
 });
 
+/**
+ * Returns Filter Values
+ */
 importer.on({ action: "filterValues" }, async ({ filterName, filters }): Promise<Aha.FilterValue[]> => {
   const asanaClient = await authenticate();
   switch (filterName) {
@@ -43,36 +49,35 @@ importer.on({ action: "filterValues" }, async ({ filterName, filters }): Promise
   return [];
 });
 
-importer.on({ action: "listCandidates" }, async ({ filters, nextPage }, { identifier, settings }) => {
-  const asanaClient = await authenticate();
-  const filterOptions: IGetTaskOptions = {
-    project: filters.project,
-    limit: MAX_RESULTS,
-    ...(nextPage ? { offset: nextPage } : {}),
-    ...(filters.assignee ? { assignee: filters.assignee } : {}),
-  };
+/**
+ * Returns Task list for importing
+ */
+importer.on(
+  { action: "listCandidates" },
+  async ({ filters, nextPage }): Promise<Aha.ListCandidate<{ uniqueId: string; name: string }>> => {
+    const asanaClient = await authenticate();
+    const filterOptions: IGetTaskOptions = {
+      project: filters.project,
+      limit: MAX_RESULTS,
+      ...(nextPage ? { offset: nextPage } : {}),
+      ...(filters.assignee ? { assignee: filters.assignee } : {}),
+    };
 
-  const { data: tasks, next_page } = await asanaClient.getTasks(filterOptions);
-  return {
-    records: tasks.map(({ gid, name }) => {
-      return {
+    const { data: tasks, next_page } = await asanaClient.getTasks(filterOptions);
+    return {
+      records: tasks.map(({ gid, name }) => ({
         uniqueId: gid,
         name: name,
-      };
-    }),
-    nextPage: next_page,
-  };
-});
+      })),
+      nextPage: next_page,
+    };
+  }
+);
 
-// Set the record description on import
-importer.on({ action: "importRecord" }, async ({ importRecord, ahaRecord }) => {
-  const asanaClient = await authenticate();
-  const task = await asanaClient.getTask(importRecord.uniqueId);
-  ahaRecord.description = `${task.notes}<p><a href='${task.permalink_url}'>View on Asana</a></p>` as any;
-  await ahaRecord.save();
-});
-
-importer.on({ action: "renderRecord" }, async ({ record, onUnmounted }, { identifier, settings }) => {
+/**
+ * Renders Import Record
+ */
+importer.on({ action: "renderRecord" }, async ({ record, onUnmounted }) => {
   const asanaClient = await authenticate();
   const task = await asanaClient.getTask(record.uniqueId);
   return (
@@ -81,4 +86,14 @@ importer.on({ action: "renderRecord" }, async ({ record, onUnmounted }, { identi
       <a href="${task.permalink_url}">{record.name}</a>
     </div>
   );
+});
+
+/**
+ * Imports Record
+ */
+importer.on({ action: "importRecord" }, async ({ importRecord, ahaRecord }) => {
+  const asanaClient = await authenticate();
+  const task = await asanaClient.getTask(importRecord.uniqueId);
+  ahaRecord.description = `${task.notes}<p><a href='${task.permalink_url}'>View on Asana</a></p>` as any;
+  await ahaRecord.save();
 });

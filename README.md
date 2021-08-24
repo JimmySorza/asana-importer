@@ -1,24 +1,20 @@
-# asana-import
+# Asana Tasks Importer - Aha Extension
   
-TODO: Supply a short overview of the functionality the extension brings to Aha! Develop
-This [Aha! Develop](https://www.aha.io/develop/overview) extension enables...
+TThis [Aha! Develop](https://www.aha.io/develop/overview) extension allows you to bring Asana Tasks into Aha!. It currently supports:
 
-It provides these contributions:
-
-TODO: Add a contribution list here. These should briefly describe each of the features provided by this extension.
+- Name (as String)
+- Notes (as HTML)
+- Section Name (as String)
 
 ## Demo
 
-TODO: Add a short .gif screen recording showing some of the highlights of your extension. This can be recorded using a tool like [LICECap](https://www.cockos.com/licecap/).
-
-![demo](demo.gif)
+![Asana importer extension demo](asana-demo.gif)
 
 ## Installing the extension
 
 **Note: In order to install an extension into your Aha! Develop account, you must be an account administrator.**
 
-TODO: Fill in a link to your built extension package
-Install the asana-import extension by clicking [here](https://secure.aha.io/settings/account/extensions/install?url=).
+Install the Asana import extension by clicking [here](https://secure.aha.io/settings/account/extensions/install?url=https%3A%2F%2Fsecure.aha.io%2Fextensions%2Faha-develop.asana-import.gz).
 
 ## Working on the extension
 
@@ -30,9 +26,8 @@ npm install -g aha-cli
 
 Clone the repo:
 
-TODO: Add the repository URL here
 ```sh
-git clone ...
+git clone https://github.com/sorza-jimmy/asana-importer.git
 ```
 
 **Note: In order to install an extension into your Aha! Develop account, you must be an account administrator.**
@@ -40,11 +35,20 @@ git clone ...
 Install the extension into Aha! and set up a watcher:
 
 ```sh
+yarn install or npm install
 aha extension:install
 aha extension:watch
 ```
 
 Now, any change you make inside your working copy will automatically take effect in your Aha! account.
+
+## Formatting
+
+When you have finished working on your extension, you can format code styles using Prettier:
+
+```sh
+yarn format or npm run format
+```
 
 ## Building
 
