@@ -1,4 +1,4 @@
-declare interface ITaskCompact {
+declare interface ITaskCompact extends Aha.ImportRecord {
   gid: string;
   resource_type: "task";
   name: string;

@@ -1,12 +1,30 @@
+import { AxiosInstance } from "axios";
 import axios from "./axios";
 
 /**
  * @class Asana API Manager
  */
-export class AsanaClient {
+class AsanaClient {
   static _instance: AsanaClient;
-  static _token: string;
 
+  /**
+   * Create AsanaClient Instance
+   *
+   * @param token
+   * @returns
+   */
+  static create = (): AsanaClient => {
+    if (!AsanaClient._instance) {
+      AsanaClient._instance = new AsanaClient();
+    }
+    return AsanaClient._instance;
+  };
+
+  setToken = (token) => {
+    this.axiosIns = axios(token);
+  };
+
+  axiosIns: AxiosInstance;
   constructor() {}
 
   /**
@@ -17,7 +35,7 @@ export class AsanaClient {
    */
   reAuth = async (callBack) => {
     const authData = await aha.auth("asana", {});
-    AsanaClient._token = authData.token;
+    this.setToken(authData.token);
     return await callBack();
   };
 
@@ -31,7 +49,7 @@ export class AsanaClient {
     try {
       const {
         data: { data },
-      } = await axios(AsanaClient._token).get("/projects", { params: options });
+      } = await this.axiosIns.get("/projects", { params: options });
       return data;
     } catch (error) {
       this.log("Could not get Projects", error);
@@ -48,7 +66,7 @@ export class AsanaClient {
     try {
       const {
         data: { data },
-      } = await axios(AsanaClient._token).get("/workspaces");
+      } = await this.axiosIns.get("/workspaces");
       return data;
     } catch (error) {
       this.log("Could not get Workspaces", error);
@@ -66,7 +84,7 @@ export class AsanaClient {
     try {
       const {
         data: { data },
-      } = await axios(AsanaClient._token).get("/users", { params: options });
+      } = await this.axiosIns.get("/users", { params: options });
       return data;
     } catch (error) {
       this.log("Could not get Users", error);
@@ -82,44 +100,25 @@ export class AsanaClient {
    */
   getTasks = async (options: IGetTaskOptions): Promise<{ data: ITaskCompact[]; next_page: string | null }> => {
     try {
+      const axiosIns = this.axiosIns;
       const {
         data: { data, next_page },
-      } = await axios(AsanaClient._token).get("/tasks", { params: { ...options } });
-      return { data, next_page };
+      } = await axiosIns.get("/tasks", { params: { ...options } });
+
+      const results = (await Promise.allSettled(data.map(({ gid }) => this.axiosIns.get(`/tasks/${gid}`)))) as any;
+      const tasks = results
+        .filter(({ status }) => {
+          return status === "fulfilled";
+        })
+        .map(({ value }) => {
+          return value?.data?.data || {};
+        });
+
+      return { data: tasks, next_page };
     } catch (error) {
       this.log("Could not get Tasks", error);
       return await this.reAuth(async () => await this.getTasks(options));
     }
-  };
-
-  /**
-   * Get Task Details from Asana
-   *
-   * @param taskId
-   * @returns
-   */
-  getTask = async (taskId: string): Promise<ITask> => {
-    try {
-      const {
-        data: { data },
-      } = await axios(AsanaClient._token).get(`/tasks/${taskId}`);
-      return data;
-    } catch (error) {
-      this.log("Could not get Task", error);
-      return await this.reAuth(async () => await this.getTask(taskId));
-    }
-  };
-
-  /**
-   * Create AsanaClient Instance
-   *
-   * @param token
-   * @returns
-   */
-  static create = async (token): Promise<AsanaClient> => {
-    AsanaClient._token = token;
-    AsanaClient._instance = new AsanaClient();
-    return AsanaClient._instance;
   };
 
   /**
@@ -132,3 +131,5 @@ export class AsanaClient {
     console.log(`[Error in Asana API Call] => `, msg, error);
   };
 }
+
+export default AsanaClient.create();

@@ -1,20 +1,20 @@
 import React from "react";
-import { AsanaClient } from "./asana";
+import asanaClient from "./asana";
 import { convertOptions } from "./utils";
 import { MAX_RESULTS } from "./config";
 
-const importer = aha.getImporter("jimmy.asana-import.asanaImport");
+const importer = aha.getImporter<ITask>("aha-develop.asana-import.asanaImport");
 
 async function authenticate(useCache = true) {
   const authData = await aha.auth("asana", { useCachedRetry: true });
-  return await AsanaClient.create(authData.token);
+  asanaClient.setToken(authData.token);
 }
 
 /**
  * Returns Filter List
  */
 importer.on({ action: "listFilters" }, async (): Promise<Aha.ListFilters> => {
-  const asanaClient = await authenticate();
+  await authenticate();
   return {
     workspace: {
       title: "WorkSpace",
@@ -33,7 +33,7 @@ importer.on({ action: "listFilters" }, async (): Promise<Aha.ListFilters> => {
  * Returns Filter Values
  */
 importer.on({ action: "filterValues" }, async ({ filterName, filters }): Promise<Aha.FilterValue[]> => {
-  const asanaClient = await authenticate();
+  await authenticate();
   switch (filterName) {
     case "workspace": {
       const workspaces = await asanaClient.getWorkSpaces();
@@ -52,38 +52,35 @@ importer.on({ action: "filterValues" }, async ({ filterName, filters }): Promise
 /**
  * Returns Task list for importing
  */
-importer.on(
-  { action: "listCandidates" },
-  async ({ filters, nextPage }): Promise<Aha.ListCandidate<{ uniqueId: string; name: string }>> => {
-    const asanaClient = await authenticate();
-    const filterOptions: IGetTaskOptions = {
-      project: filters.project,
-      limit: MAX_RESULTS,
-      ...(nextPage ? { offset: nextPage } : {}),
-      ...(filters.assignee ? { assignee: filters.assignee } : {}),
-    };
+importer.on({ action: "listCandidates" }, async ({ filters, nextPage }) => {
+  await authenticate();
+  const filterOptions: IGetTaskOptions = {
+    project: filters.project,
+    limit: MAX_RESULTS,
+    ...(nextPage ? { offset: nextPage } : {}),
+    ...(filters.assignee ? { assignee: filters.assignee } : {}),
+  };
 
-    const { data: tasks, next_page } = await asanaClient.getTasks(filterOptions);
-    return {
-      records: tasks.map(({ gid, name }) => ({
-        uniqueId: gid,
-        name: name,
-      })),
-      nextPage: next_page,
-    };
-  }
-);
+  const { data: tasks, next_page } = await asanaClient.getTasks(filterOptions);
+  return {
+    records: tasks.map(({ gid, name, ...rest }) => ({
+      uniqueId: gid,
+      name: name,
+      ...rest,
+    })),
+    nextPage: next_page,
+  };
+});
 
 /**
  * Renders Import Record
  */
 importer.on({ action: "renderRecord" }, async ({ record, onUnmounted }) => {
-  const asanaClient = await authenticate();
-  const task = await asanaClient.getTask(record.uniqueId);
+  await authenticate();
   return (
     <div>
-      <h6>{(task?.memberships || [])[0]?.section?.name || ""}</h6>
-      <a href="${task.permalink_url}">{record.name}</a>
+      <h6>{(record?.memberships || [])[0]?.section?.name || ""}</h6>
+      <a href={`${record.permalink_url}`}>{record.name}</a>
     </div>
   );
 });
@@ -92,8 +89,8 @@ importer.on({ action: "renderRecord" }, async ({ record, onUnmounted }) => {
  * Imports Record
  */
 importer.on({ action: "importRecord" }, async ({ importRecord, ahaRecord }) => {
-  const asanaClient = await authenticate();
-  const task = await asanaClient.getTask(importRecord.uniqueId);
-  ahaRecord.description = `${task.notes}<p><a href='${task.permalink_url}'>View on Asana</a></p>` as any;
+  await authenticate();
+  ahaRecord.description =
+    `${importRecord.notes}<p><a href='${importRecord.permalink_url}'>View on Asana</a></p>` as any;
   await ahaRecord.save();
 });
